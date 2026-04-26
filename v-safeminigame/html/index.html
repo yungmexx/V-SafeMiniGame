@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>v-safeminigame</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+    @font-face {
+        font-family: 'din1451alt';
+        src: url('./fonts/din1451alt.ttf') format('truetype');
+        font-weight: normal;
+        font-style: normal;
+    }
+
+    html, body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        font-family: 'din1451alt', Arial, sans-serif;
+        background: transparent !important;
+    }
+
+    #safe-container {
+        pointer-events: auto;
+    }
+
+    .safe {
+        display: none;
+        position: absolute;
+        bottom: 45%;
+        right: 25%;
+        background: rgba(33, 33, 33, 0.763);
+        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 0 30px rgba(0,0,0,0.6);
+        border-radius: 1px;
+        box-shadow: 0 0 25px rgba(0,0,0,0.6);
+        border: 1px solid rgba(255,255,255,0.08);
+        padding: 15px 40px;
+    }
+
+    .safe.fade-out {
+        opacity: 0;
+        transition: opacity 0.5s ease;
+        pointer-events: none;
+    }
+
+    .safe::before,
+    .safe::after {
+        content: "";
+        position: absolute;
+        left: 1px;
+        right: 1px;
+        height: 2px;
+        background: rgba(255, 255, 255, 0.379);
+    }
+
+    .safe::before { top: -2px; }
+    .safe::after { bottom: -2px; }
+
+    .dials {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        margin: 3px 0;
+    }
+
+    .dial-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        gap: 2px;
+    }
+    .arrow {
+        color: #eeeeee;
+        font-size: 17px;
+        left: -10px;
+        cursor: pointer;
+        user-select: none;
+        margin: -5px 0;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        display: inline-block;
+        transform: scaleX(1.5) scaleY(0.7);
+    }
+
+    .dial-container.active .arrow {
+        opacity: 1;
+    }
+    
+    .number {
+        color: white;
+        font-size: 40px;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+
+        opacity: 0.3;
+        transition: opacity 0.15s ease;
+    }
+
+    .dial-container.active .number {
+        opacity: 1;
+    }
+
+    @keyframes fadeInUp {
+        0% {
+
+        }
+        100% {
+
+        }
+    }
+
+    @keyframes fadeInDown {
+        0% {
+
+        }
+        100% {
+            
+        }
+    }
+
+    .number.animate-up {
+        animation: fadeInUp 0.2s ease;
+    }
+
+    .number.animate-down {
+        animation: fadeInDown 0.2s ease;
+    }
+
+    @keyframes shake {
+        0% { transform: translateX(0); }
+        20% { transform: translateX(-5px); }
+        40% { transform: translateX(5px); }
+        60% { transform: translateX(-5px); }
+        80% { transform: translateX(5px); }
+        100% { transform: translateX(0); }
+    }
+
+    .number.error {
+        color: rgb(223, 0, 0);
+        animation: shake 0.5s ease;
+    }
+
+    .dash {
+        position: relative;
+        top: 6px;
+        opacity: 0.7;
+    }
+</style>
+</head>
+<body>
+    <div class="safe">
+        <div class="dials">
+            <div class="dial-container">
+                <div class="arrow" data-dial="0" data-dir="up">▲</div>
+                <div class="number" id="dial1">--</div>
+                <div class="arrow" data-dial="0" data-dir="down">▼</div>
+            </div>
+            <div class="dial-container">
+                <div class="arrow" data-dial="1" data-dir="up">▲</div>
+                <div class="number" id="dial2">--</div>
+                <div class="arrow" data-dial="1" data-dir="down">▼</div>
+            </div>
+            <div class="dial-container">
+                <div class="arrow" data-dial="2" data-dir="up">▲</div>
+                <div class="number" id="dial3">--</div>
+                <div class="arrow" data-dial="2" data-dir="down">▼</div>
+            </div>
+        </div>
+    </div>
+<script>
+    let combination = [12, 34, 56];
+    let dialNumbers = [-1, -1, -1];
+    let currentDial = 0;
+    const numbers = [
+        document.getElementById('dial1'),
+        document.getElementById('dial2'),
+        document.getElementById('dial3')
+    ];
+    const dialContainers = document.querySelectorAll('.dial-container');
+    let lastDirection = ["up", "up", "up"];
+    let lastValues = ["--", "--", "--"];
+
+    function updateDials() {
+        numbers.forEach((num, index) => {
+            let newValue;
+
+            if (dialNumbers[index] === -1) {
+                newValue = '--';
+                num.classList.add('dash');
+            } else {
+                newValue = dialNumbers[index].toString().padStart(2, '0');
+                num.classList.remove('dash');
+            }
+
+            if (num.textContent !== newValue) {
+                num.textContent = newValue;
+
+                num.classList.remove('animate-up', 'animate-down');
+                void num.offsetWidth;
+
+                if (lastDirection[index] === "down") {
+                    num.classList.add('animate-down');
+                } else {
+                    num.classList.add('animate-up');
+                }
+            }
+            dialContainers[index].classList.toggle('active', index === currentDial);
+        });
+    }
+
+    function checkCombination() {
+        return dialNumbers.every((num, idx) => num === combination[idx]);
+    }
+
+    window.addEventListener('message', (event) => {
+        if (event.data.action === 'openSafe') {
+            const safeElement = document.querySelector('.safe');
+            safeElement.style.display = 'block';
+            safeElement.classList.remove('fade-out');
+            combination = event.data.combination;
+            dialNumbers = [-1, -1, -1];
+            currentDial = 0;
+            updateDials();
+        }
+    });
+
+    window.addEventListener('message', (event) => {
+        if (event.data.action === 'close') {
+            const safeElement = document.querySelector('.safe');
+            safeElement.classList.add('fade-out');
+            setTimeout(() => {
+                safeElement.style.display = 'none';
+            }, 500);
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        switch (e.key.toLowerCase()) {
+            case 'w':
+                let upVal = dialNumbers[currentDial] === -1 ? 0 : dialNumbers[currentDial];
+                dialNumbers[currentDial] = (upVal + 1) % 100;
+                lastDirection[currentDial] = "up";
+
+                fetch(`https://${GetParentResourceName()}/playSound`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: "turn"
+                    })
+                });
+                break;
+
+            case 's':
+                let downVal = dialNumbers[currentDial] === -1 ? 0 : dialNumbers[currentDial];
+                dialNumbers[currentDial] = (downVal - 1 + 100) % 100;
+                lastDirection[currentDial] = "down";
+
+                fetch(`https://${GetParentResourceName()}/playSound`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: "turn"
+                    })
+                });
+                break;
+            case 'd':
+            case ' ':
+                if (currentDial < 2) currentDial++;
+                fetch(`https://${GetParentResourceName()}/playSound`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: "next"
+                    })
+                });
+                break;
+            case 'a':
+            case 'backspace':
+                if (currentDial > 0) currentDial--;
+                fetch(`https://${GetParentResourceName()}/playSound`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: "back"
+                    })
+                });
+                break;
+            case 'escape':
+                fetch(`https://${GetParentResourceName()}/closeSafe`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                });
+                break;
+            case 'enter':
+                if (checkCombination()) {
+
+                    fetch(`https://${GetParentResourceName()}/playSound`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            action: "success"
+                        })
+                    });
+                    fetch(`https://${GetParentResourceName()}/safeSuccess`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            status: true,
+                            safeIndex: currentDial
+                        })
+                    });
+                    const safeElement = document.querySelector('.safe');
+                    safeElement.classList.add('fade-out');
+
+                    safeElement.addEventListener('transitionend', () => {
+                        safeElement.style.display = 'none';
+                        dialNumbers = [-1, -1, -1];
+                        currentDial = 0;
+                        updateDials();
+                        safeElement.classList.remove('fade-out');
+                    }, {
+                        once: true
+                    });
+                } else {
+                    numbers.forEach(num => num.classList.add('error'));
+                    fetch(`https://${GetParentResourceName()}/playSound`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            action: "error"
+                        })
+                    });
+                    setTimeout(() => {
+                        numbers.forEach(num => num.classList.remove('error'));
+                    }, 1000);
+                }
+                break;
+        }
+        updateDials();
+    });
+
+    document.querySelectorAll('.arrow').forEach(arrow => {
+        arrow.addEventListener('click', () => {
+            const dialIndex = parseInt(arrow.dataset.dial);
+            const direction = arrow.dataset.dir;
+            let val = dialNumbers[dialIndex] === -1 ? 0 : dialNumbers[dialIndex];
+            if (direction === 'up') {
+                val = (val + 1) % 100;
+                lastDirection[dialIndex] = "up";
+            } else {
+                val = (val - 1 + 100) % 100;
+                lastDirection[dialIndex] = "down";
+            }
+            dialNumbers[dialIndex] = val;
+            currentDial = dialIndex;
+            updateDials();
+        });
+    });
+
+    </script>
+</body>
+</html>
