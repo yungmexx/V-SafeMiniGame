@@ -2,7 +2,7 @@
 
 ## Overview
 
-**v-safeminigame** is a FiveM NUI-based safe cracking minigame where players must align 3 rotating dials to match a hidden combination
+**v-safeminigame** is a FiveM safe cracking minigame where players must align 3 rotating dials to match a hidden combination
 ---
 
 ## Features
