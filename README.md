@@ -2,11 +2,12 @@
 
 ## Overview
 
+**V-SafeMiniGame** is a FiveM safe cracking minigame where players must align 3 rotating dials to match a hidden combination
+
 <img width="319" height="162" alt="E174DE9A-B6AB-457A-8735-EEDE3AADBDA2" src="https://github.com/user-attachments/assets/e6e4ea8c-c337-4bae-95f3-46c2440ed1e5" />
 
 # Preview
 
-**v-safeminigame** is a FiveM safe cracking minigame where players must align 3 rotating dials to match a hidden combination
 
 https://youtu.be/e3wpSIca09M
 ---
