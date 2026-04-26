@@ -35,7 +35,7 @@
 
 ### ▶ Start Minigame
 
-```lua id="o8k2sl"
+```
 local combination = {12, 34, 56}
 
 exports['v-safeminigame']:StartMinigame(function(success)
@@ -51,7 +51,7 @@ end, combination)
 - Inside the `success` block, you can change what happens when the player successfully finishes.
 - Inside the `else` block, you can change what happens when the player fails.
 
----
+```
 
 ## Need Help?
 
